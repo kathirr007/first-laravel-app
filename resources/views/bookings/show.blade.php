@@ -21,4 +21,9 @@
     <dt class="col-sm-3">Updated</dt>
     <dd class="col-sm-9">{{ date('F d, Y', strtotime($booking->updated_at))}}</dd>
 </dl>
+
+@foreach($booking->users as $user)
+    <p>Room booked under the name of <b>{{ $user->name}}</b></p>
+@endforeach
+
 @endsection

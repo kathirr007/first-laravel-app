@@ -17,7 +17,9 @@ class BookingController extends Controller
     {
         //
         // \DB::table('bookings')->get()->dd();
-        $bookings = DB::table('bookings')->get();
+        // $bookings = DB::table('bookings')->get();
+        // Booking::withTrashed()->get()->dd();
+        $bookings = Booking::with(['room.roomType', 'users:name'])->paginate(3);
         return view('bookings.index')
             ->with('bookings', $bookings);
     }
@@ -36,6 +38,7 @@ class BookingController extends Controller
 
         return view('bookings.create')
             ->with('users', $users)
+            ->with('booking', (new Booking()))
             ->with('rooms', $rooms);
     }
 
@@ -49,18 +52,20 @@ class BookingController extends Controller
     {
         //
         // dd($request->all());
-        $id = DB::table('bookings')->insertGetId([
+        /* $id = DB::table('bookings')->insertGetId([
             'room_id' => $request->input('room_id'),
             'start' => $request->input('start'),
             'end' => $request->input('end'),
             'is_reservation' => $request->input('is_reservation', false),
             'is_paid' => $request->input('is_paid', false),
             'notes' => $request->input('notes'),
-        ]);
-        DB::table('bookings_users')->insert([
-            'booking_id' => $id,
+        ]); */
+        $booking = Booking::create($request->input());
+        /* DB::table('bookings_users')->insert([
+            'booking_id' => $booking->id,
             'user_id' => $request->input('user_id'),
-        ]);
+        ]); */
+        $booking->users()->attach($request->input('user_id'));
         return redirect()->action('BookingController@index');
     }
 
@@ -108,7 +113,7 @@ class BookingController extends Controller
     public function update(Request $request, Booking $booking)
     {
         //
-        DB::table('bookings')
+        /* DB::table('bookings')
             ->where('id', $booking->id)
             ->update([
             'room_id' => $request->input('room_id'),
@@ -117,12 +122,15 @@ class BookingController extends Controller
             'is_reservation' => $request->input('is_reservation', false),
             'is_paid' => $request->input('is_paid', false),
             'notes' => $request->input('notes'),
-        ]);
-        DB::table('bookings_users')
+        ]); */
+        $booking->fill($request->input());
+        $booking->save();
+        /* DB::table('bookings_users')
             ->where('booking_id', $booking->id)
             ->update([
             'user_id' => $request->input('user_id'),
-        ]);
+        ]); */
+        $booking->users()->sync([$request->input('user_id')]);
         return redirect()->action('BookingController@index');
     }
 
@@ -135,8 +143,10 @@ class BookingController extends Controller
     public function destroy(Booking $booking)
     {
         //
-        DB::table('bookings_users')->where('booking_id', $booking->id)->delete();
-        DB::table('bookings')->where('id', $booking->id)->delete();
+        // DB::table('bookings_users')->where('booking_id', $booking->id)->delete();
+        $booking->users()->detach();
+        // DB::table('bookings')->where('id', $booking->id)->delete();
+        $booking->delete();
         return redirect()->action('BookingController@index');
     }
 }

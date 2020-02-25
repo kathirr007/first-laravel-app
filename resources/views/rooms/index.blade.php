@@ -2,7 +2,7 @@
 
 @section('content')
 
-<table>
+<table class="table">
     <thead>
         <tr>
             <th>Room Number</th>
@@ -16,7 +16,7 @@
                     {{ $room->number }}
                 </td>
                 <td>
-                    {{ $room->room_type_id }}
+                    {{ $room->roomType->name }}
                 </td>
             </tr>
         @endforeach
